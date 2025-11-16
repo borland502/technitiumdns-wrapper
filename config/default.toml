@@ -1,0 +1,19 @@
+[app]
+description = "A CLI template for bootstrapping Bun applications"
+name = "helloc"
+version = "0.1.2"
+
+[[commands]]
+description = "Hello world command"
+module = "hello"
+name = "hello"
+
+[[commands]]
+description = "Install tools"
+name = "install"
+subcommands = true
+
+[[commands.children]]
+description = "Download and install Task"
+module = "install.task"
+name = "task"

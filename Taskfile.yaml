@@ -1,0 +1,113 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+# Get the variable PROJECT_NAME from the environment or default to the CLI name
+vars:
+  PROJECT_NAME:
+    sh: echo ${PROJECT_NAME:-helloc}
+  XDG_BIN_HOME:
+    sh: echo ${XDG_BIN_HOME:-~/.local/bin}
+
+# Set the parameter back to the environment to make it available for node operations if not already set
+env:
+  PROJECT_NAME: "{{.PROJECT_NAME}}"
+  XDG_BIN_HOME: "{{.XDG_BIN_HOME}}"
+
+tasks:
+  init:
+    silent: true
+    cmds:
+      - bun install
+    sources:
+      - node_modules
+    generates:
+      - bun.lock
+
+  lint:
+    silent: true
+    desc: "Lint the SEA for $PROJECT_NAME"
+    deps:
+      - init
+    cmds:
+      - bun run eslint **/*.{ts,json,md,yaml}
+    sources:
+      - "**/*.{ts,json,md,yaml}"
+
+  lint:fix:
+    desc: "Lint and fix the SEA for $PROJECT_NAME"
+    silent: true
+    deps:
+      - init
+    cmds:
+      - bun run eslint src/**/*.ts --fix
+    sources:
+      - src/**/*.ts
+
+  format:
+    silent: true
+    desc: "Format the SEA for $PROJECT_NAME"
+    deps:
+      - init
+    cmds:
+      - bun run prettier . --write **/*.{ts,json,md,yaml}
+    sources:
+      - "**/*.{ts,json,md,yaml}"
+
+  build:
+    silent: true
+    desc: "Build the SEA for $PROJECT_NAME"
+    deps:
+      - init
+      - lint:fix
+      - format
+    cmds:
+      - mkdir -p ${XDG_BIN_HOME:-~/.local/bin}
+      - |
+        # dynamically select target based on TARGET env variable, default to bun-darwin-arm64 if not set
+        TEMP_OUTFILE=./$PROJECT_NAME.tmp
+        bun build --compile --minify --sourcemap src/main.ts --target {{.TARGET}} --outfile $TEMP_OUTFILE
+        cp $TEMP_OUTFILE {{.OUTFILE}}
+        rm $TEMP_OUTFILE
+    sources:
+      - src/**/*.ts
+    generates:
+      - ~/.local/bin/{{.OUTFILE}}
+    vars:
+      TARGET:
+        sh: |
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]'); \
+          ARCH=$(uname -m); \
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; fi; \
+          echo "bun-${OS}-${ARCH}"
+      OUTFILE:
+        sh: echo ${XDG_BIN_HOME:-~/.local/bin}/$PROJECT_NAME
+
+  clean:
+    silent: true
+    desc: "Remove build artifacts for $PROJECT_NAME"
+    cmds:
+      - |
+        rm -f "{{.OUTFILE}}"
+        rm -f "./{{.PROJECT_NAME}}.tmp"
+        find . -maxdepth 1 -name '.*.bun-build' -delete
+    vars:
+      OUTFILE:
+        sh: echo ${XDG_BIN_HOME:-~/.local/bin}/$PROJECT_NAME
+
+  run:
+    silent: true
+    desc: "Run the SEA for $PROJECT_NAME"
+    deps:
+      - build
+    cmds:
+      - echo "Running SEA for $PROJECT_NAME..."
+      - ~/.local/bin/$PROJECT_NAME hello
+    vars:
+      TARGET:
+        sh: |
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]'); \
+          ARCH=$(uname -m); \
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; fi; \
+          echo "bun-${OS}-${ARCH}"
+      OUTFILE:
+        sh: echo ${XDG_BIN_HOME:-~/.local/bin}/$PROJECT_NAME
