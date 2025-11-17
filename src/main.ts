@@ -1,7 +1,7 @@
 import "@/globals";
 
 import { Command } from "commander";
-import { appConfig } from "./lib/config";
+import { appConfig, projectConfigFile, updateStoredAuthToken } from "./lib/config";
 import { logger } from "@/lib/logger";
 import { createTechnitiumClient, getEndpointDefinition, listEndpointIds, type QueryParams } from "@/api";
 
@@ -112,6 +112,10 @@ auth
       totp: options.totp,
       includeInfo: Boolean(options.includeInfo),
     });
+    if (updateStoredAuthToken(response.token)) {
+      appConfig.auth.token = response.token;
+      logger.info(`Saved token to ${projectConfigFile}`);
+    }
     printResult(response);
   });
 

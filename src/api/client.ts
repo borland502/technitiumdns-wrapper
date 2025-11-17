@@ -1,5 +1,4 @@
 import { getEndpointDefinition } from "./endpoints";
-import type { EndpointDefinition } from "./endpoints";
 import type {
   ApiCallResult,
   ApiCallOptions,
@@ -14,7 +13,6 @@ import type {
   BlockedZoneList,
   LogListResponse,
   DnsResolveResponse,
-  TechnitiumConfigApi,
   TechnitiumConfigAuth,
   QueryParams,
 } from "./types";
@@ -27,8 +25,16 @@ import {
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 
+type EndpointDefinition = ReturnType<typeof getEndpointDefinition>;
+
+export interface TechnitiumClientApiOptions {
+  readonly baseUrl: string;
+  readonly defaultHeaders?: HeaderRecord;
+  readonly timeoutMs?: number;
+}
+
 export interface TechnitiumClientOptions {
-  readonly api: TechnitiumConfigApi;
+  readonly api: TechnitiumClientApiOptions;
   readonly auth?: TechnitiumConfigAuth;
   readonly defaultHeaders?: HeaderRecord;
   readonly fetchImplementation?: typeof fetch;
