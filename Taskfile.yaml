@@ -174,7 +174,7 @@ tasks:
       DIST_OUTFILE:
         sh: echo dist/${PROJECT_NAME:-technitiumdns-cli}
 
-  release:
+  dist:
     desc: "Copy the current platform build to XDG_BIN_HOME"
     deps:
       - build
@@ -182,6 +182,8 @@ tasks:
       - mkdir -p ${XDG_BIN_HOME:-~/.local/bin}
       - cp {{.DIST_OUTFILE}} {{.OUTFILE}}
       - chmod +x {{.OUTFILE}}
+      - rm ${XDG_BIN_HOME:-~/.local/bin}/tdns
+      - ln -s {{.OUTFILE}} ${XDG_BIN_HOME:-~/.local/bin}/tdns
     vars:
       DIST_OUTFILE:
         sh: echo dist/${PROJECT_NAME:-technitiumdns-cli}

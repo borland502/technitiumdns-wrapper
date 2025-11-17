@@ -2,6 +2,8 @@
 
 Typed client and CLI for the [Technitium DNS Server](https://technitium.com/dns/) HTTP API. The project ships as a Bun single executable application (SEA) with reusable client utilities and commander-based commands.
 
+> Note: This project is largely written by AI and may have undesirable/untested effects
+
 ## Prerequisites
 
 - Bun 1.1+ (`curl -fsSL https://bun.sh/install | bash`)
@@ -10,14 +12,15 @@ Typed client and CLI for the [Technitium DNS Server](https://technitium.com/dns/
 
 ## Configuration
 
-- Base configuration lives in `config/default.toml` and is safe to commit
-- Secrets are pulled from `config/secrets.toml`; create it via `cp config/secrets.example.toml config/secrets.toml`
+- On first run the CLI materializes `${XDG_CONFIG_HOME:-~/.config}/technitiumdns-cli/config.toml` using the embedded defaults
+- `config/default.toml` remains the canonical template; copy or edit the generated config file for per-machine overrides
 - Populate at least:
   - `api.baseUrl` (default `http://localhost:5380/api`)
   - `auth.username` and `auth.password` or `auth.token`
   - `auth.totp` when 2FA is enabled
+- `technitiumdns-cli auth login` writes any returned session token to `auth.token` in the config file automatically
 
-You can override any value with environment variables supported by the [`config`](https://www.npmjs.com/package/config) package, e.g. `export TECHNITIUMDNS_CLI_AUTH__TOKEN=...`.
+You can override any value using `config`-style environment variables, e.g. `export TECHNITIUMDNS_CLI_AUTH__TOKEN=...`.
 
 ## Install Dependencies
 
@@ -35,14 +38,14 @@ You can override any value with environment variables supported by the [`config`
 
 ## Build Artifacts
 
-> NOTE: The build artifact will contain the token embedded in the executable
+> NOTE: The generated config file stores credentials in plain text—guard `${XDG_CONFIG_HOME:-~/.config}/technitiumdns-cli/config.toml` accordingly.
 
 - `task build` compiles the SEA for the current platform into `dist/technitiumdns-cli`
 - Cross-compile targets:
   - `task build:linux`
   - `task build:windows`
   - `task build:darwin`
-- `task release` copies the current platform binary to `${XDG_BIN_HOME:-~/.local/bin}`
+- `task dist` copies the current platform binary to `${XDG_BIN_HOME:-~/.local/bin}`
 - `task run` executes the built binary (`dist/... --help`)
 
 Launch the installed binary directly: `technitiumdns-cli zones list` (ensure `${XDG_BIN_HOME}` is on your `PATH`).
